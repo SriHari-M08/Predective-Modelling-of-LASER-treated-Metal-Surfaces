@@ -1,3 +1,4 @@
+@'
 # Predictive Modelling of LASER-treated Metal Surfaces
 
 ## Aluminium Laser Surface Processing — Taguchi DOE + ML
@@ -67,3 +68,59 @@ Take measurements at 3 locations per sample and average them:
 
 ```bash
 python taguchi_analysis.py
+```
+
+This produces:
+* S/N ratios for each run.
+* Main effects plots (which parameter matters most).
+* ANOVA table (statistical significance).
+* Optimal parameter recommendation.
+* Excel summary: `results/Taguchi_Summary.xlsx`.
+* Plots in `results/`.
+
+#### Step 7 — Train the ML model
+
+```bash
+python train.py
+```
+
+* The script automatically picks the best model (RF vs GBM vs Ridge) using Leave-One-Out CV — appropriate for small datasets. 
+* Saves the best model to `models/`.
+
+#### Step 8 — Launch the prediction app
+
+```bash
+python -m streamlit run app.py
+```
+
+---
+
+### Files
+
+| File | Run when |
+| :--- | :--- |
+| `data/Al_Experiment_Template.csv` | Fill in during experiments |
+| `taguchi_analysis.py` | After filling in results |
+| `train.py` | After taguchi analysis |
+| `app.py` | After training |
+| `config.py` | Edit if you change parameter ranges |
+
+---
+
+### Why Taguchi and not full factorial?
+
+* Full factorial with 4 parameters × 3 levels = 3⁴ = **81 experiments**.
+* Taguchi L9 gives you = **9 experiments** (×3 replicates = 27 total).
+
+The L9 orthogonal array is mathematically designed so that each level of each factor appears exactly the same number of times — this lets you isolate each parameter's effect independently, even though you're running far fewer experiments. You lose the ability to detect interaction effects (e.g. does Power × Speed interact?) but for a first study this tradeoff is always worth it.
+
+---
+
+### Warning about ML with 27 samples
+
+27 data points is small for ML. The model will work but:
+* Do NOT trust predictions far outside the training range.
+* The uncertainty (±σ shown in the app) will be wide — that's honest.
+* After the Taguchi analysis identifies the best parameters, run 3–5 "confirmation experiments" at the optimal settings and add those to your dataset before trusting the ML model.
+
+This is standard practice in Taguchi methodology — always validate with confirmation runs.
